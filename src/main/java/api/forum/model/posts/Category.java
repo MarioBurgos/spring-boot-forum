@@ -15,6 +15,7 @@ public class Category {
             cascade = CascadeType.ALL
     )
     private List<Post> posts;
+    @Column(unique = true)
     private String title;
 
     public Category() {

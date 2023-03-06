@@ -16,7 +16,6 @@ public class Post {
     @ManyToOne
     private Category category;
     @ManyToOne
-    @JoinColumn(name = "user_id")
     private User author;
     @OneToMany(
             mappedBy = "post",
@@ -32,11 +31,11 @@ public class Post {
     public Post() {
     }
 
-    public Post(Category category, User user, String content) {
+    public Post(Category category, User user, String title, String content) {
         this.category = category;
         this.author = user;
+        this.title = title;
         this.content = content;
-        title = "";
         comments = new ArrayList<>();
         upvotes = 0;
         downvotes = 0;

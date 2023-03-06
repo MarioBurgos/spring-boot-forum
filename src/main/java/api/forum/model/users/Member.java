@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @PrimaryKeyJoinColumn(name = "id")
@@ -15,10 +16,12 @@ public class Member extends User {
 
 
     public Member() {
+            super.setRoles(List.of(new Role("MEMBER")));
     }
 
     public Member(String userName, String email, String password, String profilePicture) {
         super(userName, email, password);
+        super.setRoles(List.of(new Role("MEMBER")));
         this.profilePicture = profilePicture;
         registrationDate = Date.valueOf(LocalDate.now());
         membershipLevel = 1;

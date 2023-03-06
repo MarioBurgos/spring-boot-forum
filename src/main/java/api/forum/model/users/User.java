@@ -1,6 +1,7 @@
 package api.forum.model.users;
 
 import api.forum.model.enums.Status;
+import api.forum.model.posts.Post;
 import jakarta.persistence.*;
 
 import java.sql.Date;
@@ -26,6 +27,11 @@ public abstract class User {
     private Date lastLoggedIn;
     @Enumerated(EnumType.STRING)
     private Status status;
+    @OneToMany(
+            mappedBy = "author",
+            cascade = CascadeType.ALL
+    )
+    private List<Post> posts;
 
     public User() {
     }

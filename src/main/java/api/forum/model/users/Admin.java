@@ -16,6 +16,8 @@ public class Admin extends User{
     private String location;
 
     public Admin() {
+        super.setRoles(List.of(new Role("ADMIN")));
+        actions = new ArrayList<Log>();
     }
 
     public Admin(String userName, String email, String password) {
