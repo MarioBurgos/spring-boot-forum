@@ -13,7 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -34,6 +36,8 @@ class AdminControllerImplTest {
     private AdminRepository adminRepository;
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Admin admin1, admin2;
@@ -41,12 +45,12 @@ class AdminControllerImplTest {
 
     @BeforeEach
     void setUp() {
-        admin1 = new Admin("IMANADMIN", "EMAIL", "PASSWORD");
+        admin1 = new Admin("IMANADMIN", "EMAIL", passwordEncoder.encode("PASSWORD"));
         admin1.setShift(Shift.MORNING);
         admin1.setLocation("UK");
         admin1.setStatus(Status.DISCONNECTED);
         admin1.setLastLogIn(Date.valueOf(LocalDate.now()));
-        admin2 = new Admin("anotherone", "email@email", "PASSWORD");
+        admin2 = new Admin("anotherone", "email@email", passwordEncoder.encode("PASSWORD"));
         admin2.setShift(Shift.NIGHT);
         admin2.setLocation("ITA");
         admin2.setStatus(Status.ON_VACATION);
@@ -60,13 +64,31 @@ class AdminControllerImplTest {
     }
 
     @Test
+    void findAll_UserIsNotSuperAdmin_401() throws Exception {
+
+    }
+
+    @Test
     void findAll() throws Exception {
-        mvcResult = mockMvc.perform(get("/admins"))
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", "IMANADMIN")
+                        .param("password", "PASSWORD"))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+
+        mvcResult = mockMvc.perform(get("/admins")
+                        .headers(httpHeaders)
+                        .param("username", admin1.getUsername())
+                        .param("password", admin1.getPassword()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
-        assertTrue(jsonArray.get(0).toString().contains(admin1.getUserName()));
+        assertTrue(jsonArray.get(0).toString().contains(admin1.getUsername()));
         assertTrue(jsonArray.get(1).toString().contains(admin2.getLocation()));
     }
 
