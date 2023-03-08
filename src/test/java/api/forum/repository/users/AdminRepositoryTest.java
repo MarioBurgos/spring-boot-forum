@@ -3,7 +3,6 @@ package api.forum.repository.users;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
 import api.forum.model.users.Admin;
-import api.forum.model.users.Member;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ class AdminRepositoryTest {
         admin = new Admin();
         admin.setUserName("admin");
         admin.setEmail("email");
-        admin.setLastLoggedIn(Date.valueOf(LocalDate.of(2015, 01, 01)));
+        admin.setLastLogIn(Date.valueOf(LocalDate.of(2015, 01, 01)));
         admin.setStatus(Status.DISCONNECTED);
         admin.setShift(Shift.NIGHT);
         admin.setLocation("UK");
@@ -35,7 +34,7 @@ class AdminRepositoryTest {
         banned = new Admin();
         banned.setUserName("banned");
         banned.setEmail("emailbanned");
-        banned.setLastLoggedIn(Date.valueOf(LocalDate.of(2000, 01, 01)));
+        banned.setLastLogIn(Date.valueOf(LocalDate.of(2000, 01, 01)));
         banned.setStatus(Status.BANNED);
         banned.setShift(Shift.NIGHT);
         banned.setLocation("UK");
@@ -71,12 +70,12 @@ class AdminRepositoryTest {
     }
 
     @Test
-    void findByLastLoggedInGreaterThan_GivenDateLowerThanExisting_ReturnsMembersLoggedAfterTheDate() {
-        List<Admin> admins = adminRepository.findByLastLoggedInGreaterThan(Date.valueOf(LocalDate.of(2010,1,1)));
+    void findByLastLogInGreaterThanEqual_GivenDateLowerThanExisting_ReturnsMembersLoggedAfterTheDate() {
+        List<Admin> admins = adminRepository.findByLastLogInGreaterThanEqual(Date.valueOf(LocalDate.of(2010,1,1)));
         assertEquals(1, admins.size());
         assertNotEquals(banned.getId(), admins.get(0).getId());
         // find another
-        admins = adminRepository.findByLastLoggedInGreaterThan(Date.valueOf(LocalDate.of(1990,1,1)));
+        admins = adminRepository.findByLastLogInGreaterThanEqual(Date.valueOf(LocalDate.of(1990,1,1)));
         assertEquals(2, admins.size());
         assertEquals(admin.getId(), admins.get(0).getId());
         assertEquals(banned.getId(), admins.get(1).getId());
