@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Integer> {
     Optional<Member> findByUserName(String userName);
     Optional<Member> findByEmail(String email);
-    List<Member> findByLastLoggedInGreaterThan(Date date);
+    List<Member> findByLastLogInGreaterThan(Date date);
     List<Member> findByStatus(Status status);
     List<Member> findByRegistrationDateGreaterThan(Date date);
     List<Member> findByMembershipLevelGreaterThan(Integer membershipLevel);
