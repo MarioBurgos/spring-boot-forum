@@ -48,7 +48,7 @@ public class ForumApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-//        populateDatabase();
+       // populateDatabase();
     }
 
     private void populateDatabase(){
