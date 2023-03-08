@@ -1,4 +1,4 @@
-package com.bankingsystem.filters;
+package api.forum.security.filters;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
