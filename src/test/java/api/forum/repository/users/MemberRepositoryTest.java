@@ -2,6 +2,7 @@ package api.forum.repository.users;
 
 import api.forum.model.enums.Status;
 import api.forum.model.users.Member;
+import api.forum.repository.posts.PostRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,20 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class MemberRepositoryTest {
     @Autowired
     private MemberRepository memberRepository;
+    @Autowired
+    private PostRepository postRepository;
     private Member member, duplicatedMember;
 
     @BeforeEach
     void setUp() {
         member = new Member();
-        member.setUserName("username");
+        member.setUsername("username");
         member.setEmail("email");
-        member.setLastLoggedIn(Date.valueOf(LocalDate.now()));
+        member.setLastLogIn(Date.valueOf(LocalDate.now()));
         member.setRegistrationDate(Date.valueOf(LocalDate.now()));
         member.setMembershipLevel(10);
         member.setStatus(Status.ON_LINE);
 
         duplicatedMember = new Member();
-        duplicatedMember.setLastLoggedIn(Date.valueOf(LocalDate.now()));
+        duplicatedMember.setLastLogIn(Date.valueOf(LocalDate.now()));
         duplicatedMember.setRegistrationDate(Date.valueOf(LocalDate.now()));
         duplicatedMember.setMembershipLevel(10);
         duplicatedMember.setStatus(Status.ON_LINE);
@@ -42,12 +45,13 @@ class MemberRepositoryTest {
 
     @AfterEach
     void tearDown() {
+        postRepository.deleteAll();
         memberRepository.deleteAll();
     }
 
     @Test
     void findByUserName_GivenAnExistingUsername_ReturnsMemberFound() {
-        Optional<Member> optionalMember = memberRepository.findByUserName(member.getUserName());
+        Optional<Member> optionalMember = memberRepository.findByUsername(member.getUsername());
         assertEquals(member.getId(), optionalMember.get().getId());
         assertEquals(member.getMembershipLevel(), optionalMember.get().getMembershipLevel());
         assertEquals(member.getRegistrationDate(), optionalMember.get().getRegistrationDate());
@@ -64,7 +68,7 @@ class MemberRepositoryTest {
 
     @Test
     void findByLastLoggedInGreaterThan_GivenDateLowerThanExisting_ReturnsMembersLoggedAfterTheDate() {
-        List<Member> members = memberRepository.findByLastLoggedInGreaterThan(Date.valueOf(LocalDate.of(2022, 01, 01)));
+        List<Member> members = memberRepository.findByLastLogInGreaterThan(Date.valueOf(LocalDate.of(2022, 01, 01)));
         assertEquals(2, members.size());
         assertEquals(member.getId(), members.get(0).getId());
         assertEquals(duplicatedMember.getId(), members.get(1).getId());

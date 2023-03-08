@@ -8,6 +8,7 @@ import api.forum.repository.users.AdminRepository;
 import api.forum.service.interfaces.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
 public class AdminServiceImpl implements AdminService {
     @Autowired
     private AdminRepository adminRepository;
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public List<AdminDTO> findAll() {
@@ -39,7 +41,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public AdminDTO findByUserName(String userName) {
-        Optional<Admin> optionalAdmin = adminRepository.findByUserName(userName);
+        Optional<Admin> optionalAdmin = adminRepository.findByUsername(userName);
         if (optionalAdmin.isPresent())
             return createSingleDTO(optionalAdmin.get());
         else
@@ -103,6 +105,7 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Admin addNewAdmin(Admin admin) {
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
         return adminRepository.save(admin);
     }
 
@@ -176,7 +179,7 @@ public class AdminServiceImpl implements AdminService {
         AdminDTO adminDTO = new AdminDTO();
         adminDTO.setId(admin.getId());
         adminDTO.setRoles(admin.getRoles());
-        adminDTO.setUserName(admin.getUserName());
+        adminDTO.setUserName(admin.getUsername());
         adminDTO.setEmail(admin.getEmail());
         adminDTO.setLastLoggedIn(admin.getLastLogIn());
         adminDTO.setStatus(admin.getStatus());

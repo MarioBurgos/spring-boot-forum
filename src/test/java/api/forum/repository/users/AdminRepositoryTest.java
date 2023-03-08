@@ -24,7 +24,7 @@ class AdminRepositoryTest {
     @BeforeEach
     void setUp() {
         admin = new Admin();
-        admin.setUserName("admin");
+        admin.setUsername("admin");
         admin.setEmail("email");
         admin.setLastLogIn(Date.valueOf(LocalDate.of(2015, 01, 01)));
         admin.setStatus(Status.DISCONNECTED);
@@ -32,7 +32,7 @@ class AdminRepositoryTest {
         admin.setLocation("UK");
 
         banned = new Admin();
-        banned.setUserName("banned");
+        banned.setUsername("banned");
         banned.setEmail("emailbanned");
         banned.setLastLogIn(Date.valueOf(LocalDate.of(2000, 01, 01)));
         banned.setStatus(Status.BANNED);
@@ -49,11 +49,11 @@ class AdminRepositoryTest {
 
     @Test
     void findByUserName_GivenAValidName_ReturnsAdminFound() {
-        Optional<Admin>optionalAdmin = adminRepository.findByUserName(admin.getUserName());
+        Optional<Admin>optionalAdmin = adminRepository.findByUsername(admin.getUsername());
         assertEquals(admin.getId(), optionalAdmin.get().getId());
         assertNotEquals(banned.getId(), optionalAdmin.get().getId());
         // find another
-        optionalAdmin = adminRepository.findByUserName(banned.getUserName());
+        optionalAdmin = adminRepository.findByUsername(banned.getUsername());
         assertEquals(banned.getId(), optionalAdmin.get().getId());
         assertNotEquals(admin.getId(), optionalAdmin.get().getId());
     }
