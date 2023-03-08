@@ -48,7 +48,7 @@ public class ForumApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-      //  populateDatabase();
+//        populateDatabase();
     }
 
     private void populateDatabase(){
@@ -56,17 +56,17 @@ public class ForumApplication implements CommandLineRunner {
          * Inserts
          */
         // Admins
-        admin1 = new Admin("admin1 name", "admin1@email", "admin1pass");
+        admin1 = new Admin("admin1 name", "admin1@email.com", "admin1pass");
         admin1.setStatus(Status.DISCONNECTED);
         admin1.setShift(Shift.MORNING);
         admin1.setLocation("CAT");
-        admin1.setLastLoggedIn(Date.valueOf(LocalDate.of(2023, 3, 1)));
+        admin1.setLastLogIn(Date.valueOf(LocalDate.of(2023, 3, 1)));
 
-        admin2 = new Admin("admin2 name", "admin2@email", "admin2pass");
+        admin2 = new Admin("admin2 name", "admin2@email.com", "admin2pass");
         admin2.setStatus(Status.ON_VACATION);
         admin2.setShift(Shift.EVENING);
         admin2.setLocation("UK");
-        admin2.setLastLoggedIn(Date.valueOf(LocalDate.of(2022, 12, 20)));
+        admin2.setLastLogIn(Date.valueOf(LocalDate.of(2022, 12, 20)));
         //save
         adminRepository.saveAll(List.of(admin1, admin2));
 
@@ -75,25 +75,25 @@ public class ForumApplication implements CommandLineRunner {
         member1.setMembershipLevel(1);
         member1.setRegistrationDate(Date.valueOf(LocalDate.of(2011, 1, 11)));
         member1.setStatus(Status.DISCONNECTED);
-        member1.setLastLoggedIn(Date.valueOf(LocalDate.of(2023, 1, 1)));
+        member1.setLastLogIn(Date.valueOf(LocalDate.of(2023, 1, 1)));
 
         member2 = new Member("member2 name", "member2@email.com", "member2pass", "url_img2");
         member2.setMembershipLevel(2);
         member2.setRegistrationDate(Date.valueOf(LocalDate.of(2020, 2, 22)));
         member2.setStatus(Status.DISCONNECTED);
-        member2.setLastLoggedIn(Date.valueOf(LocalDate.now()));
+        member2.setLastLogIn(Date.valueOf(LocalDate.now()));
 
         member3 = new Member("member3 name", "member3@email.com", "member3pass", "url_img3");
         member3.setMembershipLevel(3);
         member3.setRegistrationDate(Date.valueOf(LocalDate.of(2023, 3, 1)));
         member3.setStatus(Status.PENDING_CONFIRMATION);
-        member3.setLastLoggedIn(null);
+        member3.setLastLogIn(null);
 
         member4 = new Member("member4 name", "member4@email.com", "member4pass", "url_img4");
         member4.setMembershipLevel(4);
         member4.setRegistrationDate(Date.valueOf(LocalDate.of(2014, 4, 4)));
         member4.setStatus(Status.BANNED);
-        member4.setLastLoggedIn(Date.valueOf(LocalDate.of(2019, 6, 23)));
+        member4.setLastLogIn(Date.valueOf(LocalDate.of(2019, 6, 23)));
         //save
         memberRepository.saveAll(List.of(member1, member2, member3, member4));
 
