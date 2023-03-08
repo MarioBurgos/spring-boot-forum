@@ -24,7 +24,7 @@ public abstract class User {
     @Column(unique = true)
     private String email;
     private String password;
-    private Date lastLoggedIn;
+    private Date lastLogIn;
     @Enumerated(EnumType.STRING)
     private Status status;
     @OneToMany(
@@ -44,7 +44,7 @@ public abstract class User {
         this.userName = userName;
         this.email = email;
         this.password = password;
-        lastLoggedIn = null;
+        lastLogIn = null;
         status = Status.PENDING_CONFIRMATION;
     }
 
@@ -84,12 +84,12 @@ public abstract class User {
         this.password = password;
     }
 
-    public Date getLastLoggedIn() {
-        return lastLoggedIn;
+    public Date getLastLogIn() {
+        return lastLogIn;
     }
 
-    public void setLastLoggedIn(Date lastLoggedIn) {
-        this.lastLoggedIn = lastLoggedIn;
+    public void setLastLogIn(Date lastLogIn) {
+        this.lastLogIn = lastLogIn;
     }
 
     public Status getStatus() {
