@@ -50,8 +50,8 @@ public class SecurityConfiguration {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         // set up authorization for different request matchers and user roles
         http.authorizeHttpRequests()
-                .requestMatchers(HttpMethod.GET, "/admins").hasRole("ADMIN") // Only SUPERADMIN can see all admins
-//                .requestMatchers(HttpMethod.GET, "/accounts/*/balance").hasRole("ADMIN") // ADMIN can see the balance of any account
+                .requestMatchers(HttpMethod.GET, "/admins").hasRole("SUPERADMIN") // Only SUPERADMIN can list all admins
+                .requestMatchers(HttpMethod.GET, "/admins/*/*").authenticated() // Only authenticated admins can find their details
 //                .requestMatchers(HttpMethod.PATCH, "/accounts/*/balance").hasRole("ADMIN") // ADMIN can update the balance of any account
 //                .requestMatchers(HttpMethod.GET, "/account-holder/*/balance").hasRole("USER") // USER can see all their accounts balance
 //                .requestMatchers(HttpMethod.PATCH, "account-holder/*/accounts/*/transfer").hasRole("USER") // USER can transfer Money to other accounts

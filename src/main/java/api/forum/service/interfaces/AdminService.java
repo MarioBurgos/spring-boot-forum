@@ -4,6 +4,7 @@ import api.forum.controller.dto.AdminDTO;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
 import api.forum.model.users.Admin;
+import org.springframework.security.core.Authentication;
 
 import java.sql.Date;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 public interface AdminService {
     List<AdminDTO> findAll();
 
-    AdminDTO findById(Integer id);
+    AdminDTO findById(Integer id, Authentication authentication);
 
     AdminDTO findByUserName(String userName);
 

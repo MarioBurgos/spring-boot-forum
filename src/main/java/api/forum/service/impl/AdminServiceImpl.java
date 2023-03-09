@@ -8,6 +8,7 @@ import api.forum.repository.users.AdminRepository;
 import api.forum.service.interfaces.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -30,12 +31,17 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public AdminDTO findById(Integer id) {
+    public AdminDTO findById(Integer id, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
-        AdminDTO adminDTO;
-        if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        adminDTO = createSingleDTO(optionalAdmin.get());
+        AdminDTO adminDTO = null;
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                adminDTO = createSingleDTO(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
+            }
+        }
         return adminDTO;
     }
 

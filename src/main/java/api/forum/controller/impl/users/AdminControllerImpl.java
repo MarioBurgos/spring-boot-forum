@@ -8,6 +8,7 @@ import api.forum.model.users.Admin;
 import api.forum.service.interfaces.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
@@ -24,22 +25,22 @@ public class AdminControllerImpl implements AdminController {
         return adminService.findAll();
     }
 
-    @GetMapping("/admins/{id}")
-    public AdminDTO findById(@PathVariable Integer id) {
-        return adminService.findById(id);
+    @GetMapping("/admins/id/{id}")
+    public AdminDTO findById(@PathVariable Integer id, Authentication authentication) {
+        return adminService.findById(id, authentication);
     }
 
-    @GetMapping("/admins/{username}")
+    @GetMapping("/admins/username/{username}")
     public AdminDTO findByUserName(@PathVariable String userName) {
         return adminService.findByUserName(userName);
     }
 
-    @GetMapping("/admins/{email}")
+    @GetMapping("/admins/email/{email}")
     public AdminDTO findByEmail(@PathVariable String email) {
         return adminService.findByEmail(email);
     }
 
-    @GetMapping("/admins/{last-login}")
+    @GetMapping("/admins/last-login/{last-login}")
     public List<AdminDTO> findByLastLogInGreaterThan(@PathVariable Date lastLogin) {
         return adminService.findByLastLogInGreaterThanEqual(lastLogin);
     }

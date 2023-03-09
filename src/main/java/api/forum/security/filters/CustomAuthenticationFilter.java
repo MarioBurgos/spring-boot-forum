@@ -76,10 +76,10 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         // Creating an HMAC256 encoded JWT with secret key
         Algorithm algorithm = Algorithm.HMAC256("secret".getBytes()); // don't look at here pls, it's a "secret"
         // Adding user details and roles to the token
-        log.info("Token expires at " + new Date(System.currentTimeMillis() + 10 * 60 * 1000));
+        log.info("Token expires at " + new Date(System.currentTimeMillis() + 1440 * 60 * 1000));
         String accessToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 10 * 60 * 1000)) // 10 Minutes
+                .withExpiresAt(new Date(System.currentTimeMillis() + 1440 * 60 * 1000)) // Expiration at 1 day
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
