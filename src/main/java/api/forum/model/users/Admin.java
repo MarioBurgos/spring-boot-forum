@@ -20,8 +20,8 @@ public class Admin extends User{
         actions = new ArrayList<Log>();
     }
 
-    public Admin(String userName, String email, String password) {
-        super(userName, email, password);
+    public Admin(String username, String email, String password) {
+        super(username, email, password);
         super.setRoles(List.of(new Role("ADMIN")));
         actions = new ArrayList<Log>();
     }

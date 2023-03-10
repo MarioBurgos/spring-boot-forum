@@ -19,8 +19,8 @@ public class Member extends User {
             super.setRoles(List.of(new Role("MEMBER")));
     }
 
-    public Member(String userName, String email, String password, String profilePicture) {
-        super(userName, email, password);
+    public Member(String username, String email, String password, String profilePicture) {
+        super(username, email, password);
         super.setRoles(List.of(new Role("MEMBER")));
         this.profilePicture = profilePicture;
         registrationDate = Date.valueOf(LocalDate.now());

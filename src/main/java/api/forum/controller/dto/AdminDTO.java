@@ -2,8 +2,6 @@ package api.forum.controller.dto;
 
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
-import api.forum.model.posts.Post;
-import api.forum.model.users.Log;
 import api.forum.model.users.Role;
 
 import java.sql.Date;
@@ -12,7 +10,7 @@ import java.util.List;
 public class AdminDTO {
     private Integer id;
     private List<Role> roles;
-    private String userName;
+    private String username;
     private String email;
     private Date lastLoggedIn;
     private Status status;
@@ -35,12 +33,12 @@ public class AdminDTO {
         this.roles = roles;
     }
 
-    public String getUserName() {
-        return userName;
+    public String getUsername() {
+        return username;
     }
 
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
