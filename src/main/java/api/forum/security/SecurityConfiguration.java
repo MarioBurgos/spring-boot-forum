@@ -51,7 +51,11 @@ public class SecurityConfiguration {
         // set up authorization for different request matchers and user roles
         http.authorizeHttpRequests()
                 .requestMatchers(HttpMethod.GET, "/admins").hasRole("SUPERADMIN") // Only SUPERADMIN can list all admins
-                .requestMatchers(HttpMethod.GET, "/admins/*/*").authenticated() // Only authenticated admins can find their details
+                .requestMatchers(HttpMethod.GET, "/admins/last-login").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by last-login between 2 dates
+                .requestMatchers(HttpMethod.GET, "/admins/status/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by status
+                .requestMatchers(HttpMethod.GET, "/admins/shift/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by shift
+                .requestMatchers(HttpMethod.GET, "/admins/location/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by location
+                .requestMatchers(HttpMethod.GET, "/admins/*/*").authenticated() // Only authenticated ADMIN can find their details, they can't find other admins details
 //                .requestMatchers(HttpMethod.PATCH, "/accounts/*/balance").hasRole("ADMIN") // ADMIN can update the balance of any account
 //                .requestMatchers(HttpMethod.GET, "/account-holder/*/balance").hasRole("USER") // USER can see all their accounts balance
 //                .requestMatchers(HttpMethod.PATCH, "account-holder/*/accounts/*/transfer").hasRole("USER") // USER can transfer Money to other accounts
