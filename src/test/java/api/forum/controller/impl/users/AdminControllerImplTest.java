@@ -7,7 +7,6 @@ import api.forum.model.users.Role;
 import api.forum.repository.users.AdminRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +29,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 class AdminControllerImplTest {
@@ -42,27 +40,35 @@ class AdminControllerImplTest {
     private PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private Admin admin1, admin2;
-    private String admin1Username, admin2Username, password1, password2;
+    private Admin superAdmin, firstRegularAdmin, secondRegularAdmin;
+    private String superAdminUsername, firstRegularAdminAUsername, secondRegularAdminBUsername, superAdminPassword, firstRegularAdminAPassword, secondRegularAdminBPassword;
     private MvcResult mvcResult;
 
     @BeforeEach
     void setUp() {
-        admin1Username = "username1";
-        admin2Username = "username2";
-        password1 = "PASSWORD";
-        password2 = "password";
-        admin1 = new Admin(admin1Username, "EMAIL", passwordEncoder.encode(password1));
-        admin1.setShift(Shift.MORNING);
-        admin1.setLocation("UK");
-        admin1.setStatus(Status.DISCONNECTED);
-        admin1.setLastLogIn(Date.valueOf(LocalDate.now()));
-        admin2 = new Admin(admin2Username, "email@email", passwordEncoder.encode(password2));
-        admin2.setShift(Shift.NIGHT);
-        admin2.setLocation("ITA");
-        admin2.setStatus(Status.ON_VACATION);
-        admin2.setLastLogIn(Date.valueOf(LocalDate.of(2023, 1, 1)));
-        adminRepository.saveAll(List.of(admin1, admin2));
+        superAdminUsername = "super-admin";
+        firstRegularAdminAUsername = "admin A";
+        secondRegularAdminBUsername = "admin B";
+        superAdminPassword = "password";
+        firstRegularAdminAPassword = "password";
+        secondRegularAdminBPassword = "password";
+        superAdmin = new Admin(superAdminUsername, "EMAIL", passwordEncoder.encode(superAdminPassword));
+        superAdmin.setShift(Shift.MORNING);
+        superAdmin.setLocation("UK");
+        superAdmin.setStatus(Status.DISCONNECTED);
+        superAdmin.setLastLogIn(Date.valueOf(LocalDate.now()));
+        superAdmin.setRoles(List.of(new Role("SUPERADMIN"), new Role("ADMIN")));
+        firstRegularAdmin = new Admin(firstRegularAdminAUsername, "emailA@email", passwordEncoder.encode(firstRegularAdminAPassword));
+        firstRegularAdmin.setShift(Shift.NIGHT);
+        firstRegularAdmin.setLocation("ITA");
+        firstRegularAdmin.setStatus(Status.ON_VACATION);
+        firstRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2020, 1, 1)));
+        secondRegularAdmin = new Admin(secondRegularAdminBUsername, "emailB@email", passwordEncoder.encode(secondRegularAdminBPassword));
+        secondRegularAdmin.setShift(Shift.NIGHT);
+        secondRegularAdmin.setLocation("ITA");
+        secondRegularAdmin.setStatus(Status.ON_LINE);
+        secondRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2023, 3, 3)));
+        adminRepository.saveAll(List.of(superAdmin, firstRegularAdmin, secondRegularAdmin));
     }
 
     @AfterEach
@@ -71,10 +77,10 @@ class AdminControllerImplTest {
     }
 
     @Test
-    void findAll_NotAuthenticatedSuperAdmin_ResponseStatus403Forbidden() throws Exception {
+    void findAll_HasNoSuperAdminRole_ResponseStatus403Forbidden() throws Exception {
         mvcResult = mockMvc.perform(get("/login")
-                        .param("username", admin1Username)
-                        .param("password", password1))
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
                 .andExpect(status().isOk())
                 .andReturn();
         JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
@@ -83,20 +89,17 @@ class AdminControllerImplTest {
         httpHeaders.add("Authorization", "Bearer " + token);
         mvcResult = mockMvc.perform(get("/admins")
                         .headers(httpHeaders)
-                        .param("username", admin1.getUsername())
-                        .param("password", admin1.getPassword()))
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
                 .andExpect(status().isForbidden())
                 .andReturn();
     }
 
     @Test
-    void findAll_ValidSuperAdmin_ResponseStatus200Ok() throws Exception {
-        // Give SUPERADMIN Role and persist
-        admin1.setRoles(List.of(new Role("ADMIN"), new Role("SUPERADMIN")));
-        adminRepository.save(admin1);
+    void findAll_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
         mvcResult = mockMvc.perform(get("/login")
-                        .param("username", admin1Username)
-                        .param("password", password1))
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
                 .andExpect(status().isOk())
                 .andReturn();
         JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
@@ -105,61 +108,65 @@ class AdminControllerImplTest {
         httpHeaders.add("Authorization", "Bearer " + token);
         mvcResult = mockMvc.perform(get("/admins")
                         .headers(httpHeaders)
-                        .param("username", admin1.getUsername())
-                        .param("password", admin1.getPassword()))
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
-        assertTrue(jsonArray.get(0).toString().contains(admin1.getUsername()));
-        assertTrue(jsonArray.get(1).toString().contains(admin2.getLocation()));
+        assertEquals(3, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(superAdmin.getUsername()));
+        assertTrue(jsonArray.get(1).toString().contains(firstRegularAdmin.getLocation()));
+        assertTrue(jsonArray.get(2).toString().contains(secondRegularAdmin.getLocation()));
     }
 
     @Test
-    void findById_NotAuthenticatedAdmin_ResponseStatus404NotFound() throws Exception {
+    void findById_HasAdminRoleButItIsNotHisOrHerAdminAccount_ResponseStatus403Forbidden() throws Exception {
         mvcResult = mockMvc.perform(get("/login")
-                        .param("username", admin1Username)
-                        .param("password", password1))
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
                 .andExpect(status().isOk())
                 .andReturn();
         JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/id/" + admin2.getId())
+        mvcResult = mockMvc.perform(get("/admins/id/" + secondRegularAdmin.getId())
                         .headers(httpHeaders)
-                        .param("username", admin1.getUsername())
-                        .param("password", admin1.getPassword()))
-                .andExpect(status().isNotFound())
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
                 .andReturn();
     }
+
     @Test
     void findById_AuthenticatedAdmin_ResponseStatus200Ok() throws Exception {
         mvcResult = mockMvc.perform(get("/login")
-                        .param("username", admin1Username)
-                        .param("password", password1))
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
                 .andExpect(status().isOk())
                 .andReturn();
         JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/id/" + admin1.getId())
+        mvcResult = mockMvc.perform(get("/admins/id/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
-                        .param("username", admin1.getUsername())
-                        .param("password", admin1.getPassword()))
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
     }
 
     @Test
     void findById_AuthenticatedSuperAdmin_ResponseStatus200Ok() throws Exception {
         // Give SUPERADMIN Role and persist
-        admin1.setRoles(List.of(new Role("ADMIN"), new Role("SUPERADMIN")));
-        adminRepository.save(admin1);
+        superAdmin.setRoles(List.of(new Role("ADMIN"), new Role("SUPERADMIN")));
+        adminRepository.save(superAdmin);
         mvcResult = mockMvc.perform(get("/login")
-                        .param("username", admin1Username)
-                        .param("password", password1))
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
                 .andExpect(status().isOk())
                 .andReturn();
         JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
@@ -167,40 +174,362 @@ class AdminControllerImplTest {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
         // find admin2 by id
-        mvcResult = mockMvc.perform(get("/admins/id/" + admin2.getId())
+        mvcResult = mockMvc.perform(get("/admins/id/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
-                        .param("username", admin1.getUsername())
-                        .param("password", admin1.getPassword()))
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
         jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        assertTrue(jsonObject.toString().contains(admin2.getUsername()));
-    }
-
-    void findByUserName_ValidSuperAdmin_ResponseStatus200Ok(){}
-    @Test
-    void findByEmail() {
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getUsername()));
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getEmail()));
     }
 
     @Test
-    void findByLastLogInGreaterThan() {
+    void findByEmail_HasAdminRoleButItIsNotHisOrHerAdminAccount_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/email/" + secondRegularAdmin.getEmail())
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
     }
 
     @Test
-    void findByLastLogInBetween() {
+    void findByEmail_AuthenticatedSuperAdmin_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/email/" + firstRegularAdmin.getEmail())
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getUsername()));
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getEmail()));
     }
 
     @Test
-    void findByStatus() {
+    void findByEmail_AuthenticatedRegularAdmin_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/email/" + firstRegularAdmin.getEmail())
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getUsername()));
+        assertTrue(jsonObject.toString().contains(firstRegularAdmin.getEmail()));
     }
 
     @Test
-    void findByShift() {
+    void findByLastLogInGreaterThan_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login/2010-03-03")
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
     }
 
     @Test
-    void findByLocation() {
+    void findByLastLogInGreaterThan_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login/2023-3-3")
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+        assertEquals(2, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(superAdmin.getUsername()));
+        assertTrue(jsonArray.get(0).toString().contains(superAdmin.getEmail()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getLocation()));
+    }
+
+    @Test
+    void findByLastLogInBetween_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2020-1-1&end-date=2023-3-10")
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void findByLastLogInBetween_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-3-5&end-date=2023-3-10")
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+        assertEquals(1, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(superAdmin.getUsername()));
+        assertTrue(jsonArray.get(0).toString().contains(superAdmin.getEmail()));
+
+    }
+ @Test
+    void findByLastLogIn_SuperAdminPassesBothStartDateAndEndDateParams_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-3-1&end-date=2023-3-5")
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+     JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+     assertEquals(1, jsonArray.length());
+     assertTrue(jsonArray.get(0).toString().contains(secondRegularAdmin.getUsername()));
+     assertTrue(jsonArray.get(0).toString().contains(secondRegularAdmin.getEmail()));
+
+    }
+@Test
+    void findByLastLogIn_SuperAdminPassesOnlyStartDateParam_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-1-1")
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+     JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+     assertEquals(2, jsonArray.length());
+     assertTrue(jsonArray.get(0).toString().contains(superAdmin.getUsername()));
+     assertTrue(jsonArray.get(0).toString().contains(superAdmin.getEmail()));
+     assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getUsername()));
+     assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getEmail()));
+    }
+    @Test
+    void findByLastLogIn_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2020-1-1&end-date=2023-3-10")
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    void findByStatus_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/status/" + secondRegularAdmin.getStatus())
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void findByStatus_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/status/" + secondRegularAdmin.getStatus())
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+        assertEquals(1, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(secondRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(0).toString().contains(secondRegularAdmin.getEmail()));
+    }
+
+    @Test
+    void findByShift_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/shift/" + secondRegularAdmin.getShift())
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void findByShift_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/shift/" + secondRegularAdmin.getShift())
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+        assertEquals(2, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(firstRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(0).toString().contains(firstRegularAdmin.getEmail()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getEmail()));
+    }
+
+    @Test
+    void findByLocation_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminAUsername)
+                        .param("password", firstRegularAdminAPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/location/" + secondRegularAdmin.getLocation())
+                        .headers(httpHeaders)
+                        .param("username", firstRegularAdmin.getUsername())
+                        .param("password", firstRegularAdmin.getPassword()))
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void findByLocation_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(get("/admins/location/" + firstRegularAdmin.getLocation())
+                        .headers(httpHeaders)
+                        .param("username", superAdmin.getUsername())
+                        .param("password", superAdmin.getPassword()))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONArray jsonArray = new JSONArray(mvcResult.getResponse().getContentAsString());
+        for (int i = 0; i < jsonArray.length(); i++) {
+            System.out.println(jsonArray.get(i));
+        }
+        assertEquals(2, jsonArray.length());
+        assertTrue(jsonArray.get(0).toString().contains(firstRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(0).toString().contains(firstRegularAdmin.getEmail()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getUsername()));
+        assertTrue(jsonArray.get(1).toString().contains(secondRegularAdmin.getEmail()));
     }
 
     @Test
