@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class AdminControllerImpl implements AdminController {
@@ -31,37 +32,32 @@ public class AdminControllerImpl implements AdminController {
     }
 
     @GetMapping("/admins/username/{username}")
-    public AdminDTO findByUserName(@PathVariable String userName) {
-        return adminService.findByUserName(userName);
+    public AdminDTO findByUserName(@PathVariable String userName, Authentication authentication) {
+        return adminService.findByUserName(userName, authentication);
     }
 
     @GetMapping("/admins/email/{email}")
-    public AdminDTO findByEmail(@PathVariable String email) {
-        return adminService.findByEmail(email);
-    }
-
-    @GetMapping("/admins/last-login/{last-login}")
-    public List<AdminDTO> findByLastLogInGreaterThan(@PathVariable Date lastLogin) {
-        return adminService.findByLastLogInGreaterThanEqual(lastLogin);
+    public AdminDTO findByEmail(@PathVariable String email, Authentication authentication) {
+        return adminService.findByEmail(email, authentication);
     }
 
     @GetMapping("/admins/last-login")
-    public List<AdminDTO> findByLastLogInBetween(@RequestParam Date start, @RequestParam Date end) {
-        return adminService.findByLastLogInBetween(start, end);
+    public List<AdminDTO> findByLastLogIn(@RequestParam(name = "start-date") Date startDate, @RequestParam(name = "end-date") Optional<Date> endDate) {
+        return adminService.findByLastLogIn(startDate, endDate);
     }
 
 
-    @GetMapping("/admins/{status}")
+    @GetMapping("/admins/status/{status}")
     public List<AdminDTO> findByStatus(@PathVariable Status status) {
         return adminService.findByStatus(status);
     }
 
-    @GetMapping("/admins/{shift}")
+    @GetMapping("/admins/shift/{shift}")
     public List<AdminDTO> findByShift(@PathVariable Shift shift) {
         return adminService.findByShift(shift);
     }
 
-    @GetMapping("/admins/{location}")
+    @GetMapping("/admins/location/{location}")
     public List<AdminDTO> findByLocation(@PathVariable String location) {
         return adminService.findByLocation(location);
     }

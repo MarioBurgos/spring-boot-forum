@@ -8,19 +8,18 @@ import org.springframework.security.core.Authentication;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 public interface AdminService {
     List<AdminDTO> findAll();
 
     AdminDTO findById(Integer id, Authentication authentication);
 
-    AdminDTO findByUserName(String userName);
+    AdminDTO findByUserName(String userName, Authentication authentication);
 
-    AdminDTO findByEmail(String email);
+    AdminDTO findByEmail(String email, Authentication authentication);
 
-    List<AdminDTO> findByLastLogInGreaterThanEqual(Date date);
-
-    List<AdminDTO> findByLastLogInBetween(Date start, Date end);
+    List<AdminDTO> findByLastLogIn(Date start, Optional<Date> end);
 
     List<AdminDTO> findByStatus(Status status);
 

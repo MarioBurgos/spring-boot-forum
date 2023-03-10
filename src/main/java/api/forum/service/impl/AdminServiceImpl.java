@@ -39,46 +39,61 @@ public class AdminServiceImpl implements AdminService {
                     || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
                 adminDTO = createSingleDTO(optionalAdmin.get());
             } else {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
             }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for ID: " + id);
         }
         return adminDTO;
     }
 
     @Override
-    public AdminDTO findByUserName(String userName) {
+    public AdminDTO findByUserName(String userName, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findByUsername(userName);
-        if (optionalAdmin.isPresent())
-            return createSingleDTO(optionalAdmin.get());
-        else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + userName);
+        AdminDTO adminDTO = null;
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                adminDTO = createSingleDTO(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for username: " + userName);
+        }
+        return adminDTO;
     }
 
     @Override
-    public AdminDTO findByEmail(String email) {
+    public AdminDTO findByEmail(String email, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findByEmail(email);
-        if (optionalAdmin.isPresent())
-            return createSingleDTO(optionalAdmin.get());
-        else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + email);
+        AdminDTO adminDTO = null;
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                adminDTO = createSingleDTO(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for email: " + email);
+        }
+        return adminDTO;
     }
 
     @Override
-    public List<AdminDTO> findByLastLogInGreaterThanEqual(Date date) {
-        List<Admin> admins = adminRepository.findByLastLogInGreaterThanEqual(date);
-        if (admins.size() > 0)
-            return createListOfDTO(admins);
-        else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches since " + date.toString());
-    }
+    public List<AdminDTO> findByLastLogIn(Date startDate, Optional<Date> endDate) {
+        List<Admin> admins;
 
-    @Override
-    public List<AdminDTO> findByLastLogInBetween(Date start, Date end) {
-        List<Admin> admins = adminRepository.findByLastLogInBetween(start, end);
+        if (endDate.isPresent()){
+            admins = adminRepository.findByLastLogInBetween(startDate, endDate.get());
+        }else {
+            admins = adminRepository.findByLastLogInGreaterThanEqual(startDate);
+        }
         if (admins.size() > 0)
             return createListOfDTO(admins);
         else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches between " + start.toString() + " and " + end.toString());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches between " + startDate.toString() + " and " + endDate.toString());
     }
 
 
@@ -88,7 +103,7 @@ public class AdminServiceImpl implements AdminService {
         if (admins.size() > 0)
             return createListOfDTO(admins);
         else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for status" + status.toString());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for status: " + status.toString());
     }
 
     @Override
@@ -97,7 +112,7 @@ public class AdminServiceImpl implements AdminService {
         if (admins.size() > 0)
             return createListOfDTO(admins);
         else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + shift.toString());
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for shift: " + shift.toString());
     }
 
     @Override
@@ -106,7 +121,7 @@ public class AdminServiceImpl implements AdminService {
         if (admins.size() > 0)
             return createListOfDTO(admins);
         else
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + location);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for location: " + location);
     }
 
     @Override
