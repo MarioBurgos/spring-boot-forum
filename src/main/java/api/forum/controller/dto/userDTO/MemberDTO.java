@@ -1,4 +1,4 @@
-package api.forum.controller.dto;
+package api.forum.controller.dto.userDTO;
 
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;

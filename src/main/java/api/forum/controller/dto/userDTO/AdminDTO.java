@@ -1,4 +1,4 @@
-package api.forum.controller.dto;
+package api.forum.controller.dto.userDTO;
 
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
@@ -12,7 +12,7 @@ public class AdminDTO {
     private List<Role> roles;
     private String username;
     private String email;
-    private Date lastLoggedIn;
+    private Date lastLogIn;
     private Status status;
     private Shift shift;
     private String location;
@@ -49,12 +49,12 @@ public class AdminDTO {
         this.email = email;
     }
 
-    public Date getLastLoggedIn() {
-        return lastLoggedIn;
+    public Date getLastLogIn() {
+        return lastLogIn;
     }
 
-    public void setLastLoggedIn(Date lastLoggedIn) {
-        this.lastLoggedIn = lastLoggedIn;
+    public void setLastLogIn(Date lastLogIn) {
+        this.lastLogIn = lastLogIn;
     }
 
     public Status getStatus() {
