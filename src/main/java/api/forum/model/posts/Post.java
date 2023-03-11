@@ -1,6 +1,7 @@
 package api.forum.model.posts;
 
 import api.forum.model.users.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Date;
@@ -14,6 +15,7 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne
+    @JsonIgnore
     private Category category;
     @ManyToOne
     private User author;
