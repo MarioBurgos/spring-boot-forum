@@ -41,10 +41,10 @@ class AdminControllerImplTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private MvcResult mvcResult;
 
     private Admin superAdmin, firstRegularAdmin, secondRegularAdmin, thirdRegularAdmin;
     private String superAdminUsername, firstRegularAdminUsername, secondRegularAdminUsername, superAdminPassword, firstRegularAdminPassword, secondRegularAdminPassword;
-    private MvcResult mvcResult;
 
     @BeforeEach
     void setUp() {
@@ -134,7 +134,7 @@ class AdminControllerImplTest {
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/id/" + secondRegularAdmin.getId())
+        mvcResult = mockMvc.perform(get("/admins/" + secondRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
                         .param("password", firstRegularAdmin.getPassword()))
@@ -153,7 +153,7 @@ class AdminControllerImplTest {
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/id/" + firstRegularAdmin.getId())
+        mvcResult = mockMvc.perform(get("/admins/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
                         .param("password", firstRegularAdmin.getPassword()))
@@ -175,7 +175,7 @@ class AdminControllerImplTest {
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/id/" + firstRegularAdmin.getId())
+        mvcResult = mockMvc.perform(get("/admins/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
                         .param("password", superAdmin.getPassword()))
@@ -1110,4 +1110,68 @@ class AdminControllerImplTest {
         assertEquals(optionalAdmin.get().getLocation(), locationDTO.getLocation());
     }
 
+    @Test
+    void delete_RegularAdminTriesToDeleteAnotherAdmin_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        delete("/admins/" + secondRegularAdmin.getId())
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void delete_RegularAdminTriesToDeleteOwnAdmin_ResponseStatus403Forbidden() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        delete("/admins/" + firstRegularAdmin.getId())
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void delete_SuperAdminToDeletesAdmin_ResponseStatus204NoContent() throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        delete("/admins/" + firstRegularAdmin.getId())
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        assertFalse(adminRepository.existsById(firstRegularAdmin.getId()));
+    }
 }

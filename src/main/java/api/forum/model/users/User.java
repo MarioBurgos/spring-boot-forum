@@ -2,6 +2,7 @@ package api.forum.model.users;
 
 import api.forum.model.enums.Status;
 import api.forum.model.posts.Post;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.sql.Date;
@@ -28,9 +29,11 @@ public abstract class User {
     @Enumerated(EnumType.STRING)
     private Status status;
     @OneToMany(
+            fetch = FetchType.LAZY,
             mappedBy = "author",
             cascade = CascadeType.ALL
     )
+    @JsonIgnore
     private List<Post> posts;
 
     public User() {
@@ -100,4 +103,11 @@ public abstract class User {
         this.status = status;
     }
 
+    public List<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(List<Post> posts) {
+        this.posts = posts;
+    }
 }

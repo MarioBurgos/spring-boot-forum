@@ -240,6 +240,15 @@ public class AdminServiceImpl implements AdminService {
         }
     }
 
+    @Override
+    public void delete(Integer id) {
+        if (adminRepository.findById(id).isPresent())
+            adminRepository.deleteById(id);
+        else
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+    }
+
+
     /**
      * PRIVATE METHODS
      */

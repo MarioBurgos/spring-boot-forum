@@ -26,7 +26,7 @@ public class AdminControllerImpl implements AdminController {
         return adminService.findAll();
     }
 
-    @GetMapping("/admins/id/{id}")
+    @GetMapping("/admins/{id}")
     public AdminDTO findById(@PathVariable Integer id, Authentication authentication) {
         return adminService.findById(id, authentication);
     }
@@ -117,5 +117,12 @@ public class AdminControllerImpl implements AdminController {
     public void updateLocation(@PathVariable Integer id, @RequestBody LocationDTO locationDTO, Authentication authentication) {
         adminService.updateLocation(id, locationDTO, authentication);
     }
+
+    @DeleteMapping("/admins/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Integer id) {
+        adminService.delete(id);
+    }
+
 
 }

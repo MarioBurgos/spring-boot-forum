@@ -44,4 +44,5 @@ public interface AdminController {
     void updateShift(Integer id, ShiftDTO shiftDTO);
 
     void updateLocation(Integer id, LocationDTO locationDTO, Authentication authentication);
+    void delete(Integer id);
 }

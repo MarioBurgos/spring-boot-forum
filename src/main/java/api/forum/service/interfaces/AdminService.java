@@ -45,4 +45,5 @@ public interface AdminService {
 
     void updateLocation(Integer id, LocationDTO locationDTO, Authentication authentication);
 
+    void delete(Integer id);
 }
