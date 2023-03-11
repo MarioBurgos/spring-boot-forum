@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Integer> {
 
-    Optional<Admin> findByUsername(String userName);
+    Optional<Admin> findByUsername(String username);
     Optional<Admin> findByEmail(String email);
     List<Admin> findByLastLogInGreaterThanEqual(Date date);
     List<Admin> findByLastLogInBetween(Date start, Date end);

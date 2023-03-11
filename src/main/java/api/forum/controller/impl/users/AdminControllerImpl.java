@@ -1,6 +1,6 @@
 package api.forum.controller.impl.users;
 
-import api.forum.controller.dto.AdminDTO;
+import api.forum.controller.dto.userDTO.*;
 import api.forum.controller.interfaces.AdminController;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
@@ -71,21 +71,27 @@ public class AdminControllerImpl implements AdminController {
 
     // PUT MAPPING
     @PutMapping("/admins/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateAdmin(@PathVariable Integer id, @RequestBody Admin admin) {
         adminService.updateAdmin(id, admin);
     }
 
     // PATCH MAPPING
+    @PatchMapping("/admins/{id}/username")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateAdminUsername(@PathVariable Integer id, @RequestBody UsernameDTO usernameDTO, Authentication authentication) {
+        adminService.updateAdminUsername(id, usernameDTO, authentication);
+    }
     @PatchMapping("/admins/{id}/email")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAdminEmail(@PathVariable Integer id, @RequestBody String email) {
-        adminService.updateAdminEmail(id, email);
+    public void updateAdminEmail(@PathVariable Integer id, @RequestBody EmailDTO emailDTO, Authentication authentication) {
+        adminService.updateAdminEmail(id, emailDTO, authentication);
     }
 
     @PatchMapping("/admins/{id}/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAdminPassword(@PathVariable Integer id, @RequestBody String password) {
-        adminService.updateAdminPassword(id, password);
+    public void updateAdminPassword(@PathVariable Integer id, @RequestBody PasswordDTO passwordDTO, Authentication authentication) {
+        adminService.updateAdminPassword(id, passwordDTO, authentication);
     }
 
     @PatchMapping("/admins/{id}/last-login")
@@ -96,20 +102,20 @@ public class AdminControllerImpl implements AdminController {
 
     @PatchMapping("/admins/{id}/status")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateStatus(@PathVariable Integer id, @RequestBody Status status) {
-        adminService.updateStatus(id, status);
+    public void updateStatus(@PathVariable Integer id, @RequestBody StatusDTO statusDTO, Authentication authentication) {
+        adminService.updateStatus(id, statusDTO, authentication);
     }
 
     @PatchMapping("/admins/{id}/shift")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateShift(@PathVariable Integer id, @RequestBody Shift shift) {
-        adminService.updateShift(id, shift);
+    public void updateShift(@PathVariable Integer id, @RequestBody ShiftDTO shiftDTO) {
+        adminService.updateShift(id, shiftDTO);
     }
 
     @PatchMapping("/admins/{id}/location")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateLocation(@PathVariable Integer id, @RequestBody String location) {
-        adminService.updateLocation(id, location);
+    public void updateLocation(@PathVariable Integer id, @RequestBody LocationDTO locationDTO, Authentication authentication) {
+        adminService.updateLocation(id, locationDTO, authentication);
     }
 
 }

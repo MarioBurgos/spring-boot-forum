@@ -50,15 +50,20 @@ public class SecurityConfiguration {
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         // set up authorization for different request matchers and user roles
         http.authorizeHttpRequests()
-                .requestMatchers(HttpMethod.GET, "/admins").hasRole("SUPERADMIN") // Only SUPERADMIN can list all admins
-                .requestMatchers(HttpMethod.GET, "/admins/last-login").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by last-login between 2 dates
-                .requestMatchers(HttpMethod.GET, "/admins/status/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by status
-                .requestMatchers(HttpMethod.GET, "/admins/shift/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by shift
-                .requestMatchers(HttpMethod.GET, "/admins/location/*").hasRole("SUPERADMIN") // Only SUPERADMIN can find other admins by location
-                .requestMatchers(HttpMethod.GET, "/admins/*/*").authenticated() // Only authenticated ADMIN can find their details, they can't find other admins details
-//                .requestMatchers(HttpMethod.PATCH, "/accounts/*/balance").hasRole("ADMIN") // ADMIN can update the balance of any account
-//                .requestMatchers(HttpMethod.GET, "/account-holder/*/balance").hasRole("USER") // USER can see all their accounts balance
-//                .requestMatchers(HttpMethod.PATCH, "account-holder/*/accounts/*/transfer").hasRole("USER") // USER can transfer Money to other accounts
+                .requestMatchers(HttpMethod.POST, "/admins").hasRole("SUPERADMIN") // new Admin
+                .requestMatchers(HttpMethod.GET, "/admins").hasRole("SUPERADMIN") // list all admins
+                .requestMatchers(HttpMethod.GET, "/admins/last-login").hasRole("SUPERADMIN") // find by last-login between 2 dates
+                .requestMatchers(HttpMethod.GET, "/admins/status/*").hasRole("SUPERADMIN") // find by status
+                .requestMatchers(HttpMethod.GET, "/admins/shift/*").hasRole("SUPERADMIN") // find by shift
+                .requestMatchers(HttpMethod.GET, "/admins/location/*").hasRole("SUPERADMIN") // find by location
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/username").authenticated() // update/patch email
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/email").authenticated() // update/patch email
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/password").authenticated() // update/patch password
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/status").authenticated() // update/patch status
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/location").authenticated() // update/patch location
+                .requestMatchers(HttpMethod.PATCH, "/admins/*/shift").hasRole("SUPERADMIN") // update/patch shift
+                .requestMatchers(HttpMethod.GET, "/admins/*").authenticated()  // find by id
+                .requestMatchers(HttpMethod.PUT, "/admins/*").hasRole("SUPERADMIN") // update admin
                 .anyRequest().permitAll();
 
         // add the custom authentication filter to the http security object

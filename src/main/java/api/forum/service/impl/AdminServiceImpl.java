@@ -1,6 +1,6 @@
 package api.forum.service.impl;
 
-import api.forum.controller.dto.AdminDTO;
+import api.forum.controller.dto.userDTO.*;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
 import api.forum.model.users.Admin;
@@ -32,9 +32,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public AdminDTO findById(Integer id, Authentication authentication) {
+        // search by id
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
         AdminDTO adminDTO = null;
         if (optionalAdmin.isPresent()) {
+            // check whether the user has the same username that the Admin we're looking for
+            // or if the user has Role = "SUPERADMIN"
             if (authentication.getName().equals(optionalAdmin.get().getUsername())
                     || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
                 adminDTO = createSingleDTO(optionalAdmin.get());
@@ -134,27 +137,57 @@ public class AdminServiceImpl implements AdminService {
     public void updateAdmin(Integer id, Admin admin) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
         if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
         admin.setId(id);
         adminRepository.save(admin);
     }
 
     @Override
-    public void updateAdminEmail(Integer id, String email) {
+    public void updateAdminUsername(Integer id, UsernameDTO usernameDTO, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
-        if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        optionalAdmin.get().setEmail(email);
-        adminRepository.save(optionalAdmin.get());
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                optionalAdmin.get().setUsername(usernameDTO.getUsername());
+                adminRepository.save(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+        }
     }
 
     @Override
-    public void updateAdminPassword(Integer id, String password) {
+    public void updateAdminEmail(Integer id, EmailDTO emailDTO, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
-        if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        optionalAdmin.get().setPassword(password);
-        adminRepository.save(optionalAdmin.get());
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                optionalAdmin.get().setEmail(emailDTO.getEmail());
+                adminRepository.save(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+        }
+    }
+
+    @Override
+    public void updateAdminPassword(Integer id, PasswordDTO passwordDTO, Authentication authentication) {
+        Optional<Admin> optionalAdmin = adminRepository.findById(id);
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                optionalAdmin.get().setPassword(passwordDTO.getPassword());
+                adminRepository.save(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+        }
     }
 
     @Override
@@ -167,30 +200,44 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public void updateStatus(Integer id, Status status) {
+    public void updateStatus(Integer id, StatusDTO statusDTO, Authentication authentication) {
+        Optional<Admin> optionalAdmin = adminRepository.findById(id);
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                optionalAdmin.get().setStatus(statusDTO.getStatus());
+                adminRepository.save(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+        }
+    }
+
+    @Override
+    public void updateShift(Integer id, ShiftDTO shiftDTO) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
         if (optionalAdmin.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        optionalAdmin.get().setStatus(status);
+        optionalAdmin.get().setShift(shiftDTO.getShift());
         adminRepository.save(optionalAdmin.get());
     }
 
     @Override
-    public void updateShift(Integer id, Shift shift) {
+    public void updateLocation(Integer id, LocationDTO locationDTO, Authentication authentication) {
         Optional<Admin> optionalAdmin = adminRepository.findById(id);
-        if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        optionalAdmin.get().setShift(shift);
-        adminRepository.save(optionalAdmin.get());
-    }
-
-    @Override
-    public void updateLocation(Integer id, String location) {
-        Optional<Admin> optionalAdmin = adminRepository.findById(id);
-        if (optionalAdmin.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches for " + id);
-        optionalAdmin.get().setLocation(location);
-        adminRepository.save(optionalAdmin.get());
+        if (optionalAdmin.isPresent()) {
+            if (authentication.getName().equals(optionalAdmin.get().getUsername())
+                    || authentication.getAuthorities().toString().contains("SUPERADMIN") ) {
+                optionalAdmin.get().setLocation(locationDTO.getLocation());
+                adminRepository.save(optionalAdmin.get());
+            } else {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed");
+            }
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No matches");
+        }
     }
 
     /**
@@ -200,9 +247,9 @@ public class AdminServiceImpl implements AdminService {
         AdminDTO adminDTO = new AdminDTO();
         adminDTO.setId(admin.getId());
         adminDTO.setRoles(admin.getRoles());
-        adminDTO.setUserName(admin.getUsername());
+        adminDTO.setUsername(admin.getUsername());
         adminDTO.setEmail(admin.getEmail());
-        adminDTO.setLastLoggedIn(admin.getLastLogIn());
+        adminDTO.setLastLogIn(admin.getLastLogIn());
         adminDTO.setStatus(admin.getStatus());
         adminDTO.setShift(admin.getShift());
         adminDTO.setLocation(admin.getLocation());
@@ -218,4 +265,6 @@ public class AdminServiceImpl implements AdminService {
         }
         return adminDTOS;
     }
+
+
 }

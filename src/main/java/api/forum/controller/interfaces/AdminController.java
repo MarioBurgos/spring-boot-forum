@@ -1,6 +1,6 @@
 package api.forum.controller.interfaces;
 
-import api.forum.controller.dto.AdminDTO;
+import api.forum.controller.dto.userDTO.*;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
 import api.forum.model.users.Admin;
@@ -31,15 +31,17 @@ public interface AdminController {
 
     void updateAdmin(Integer id, Admin admin);
 
-    void updateAdminEmail(Integer id, String email);
+    void updateAdminUsername(Integer id, UsernameDTO usernameDTO, Authentication authentication);
 
-    void updateAdminPassword(Integer id, String password);
+    void updateAdminEmail(Integer id, EmailDTO emailDTO, Authentication authentication);
+
+    void updateAdminPassword(Integer id, PasswordDTO passwordDTO, Authentication authentication);
 
     void updateLastLogIn(Integer id, Date lastLogIn);
 
-    void updateStatus(Integer id, Status status);
+    void updateStatus(Integer id, StatusDTO statusDTO, Authentication authentication);
 
-    void updateShift(Integer id, Shift shift);
+    void updateShift(Integer id, ShiftDTO shiftDTO);
 
-    void updateLocation(Integer id, String location);
+    void updateLocation(Integer id, LocationDTO locationDTO, Authentication authentication);
 }
