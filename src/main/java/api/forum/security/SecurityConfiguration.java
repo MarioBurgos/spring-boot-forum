@@ -64,6 +64,9 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.PATCH, "/admins/*/shift").hasRole("SUPERADMIN") // update/patch shift
                 .requestMatchers(HttpMethod.GET, "/admins/*").authenticated()  // find by id
                 .requestMatchers(HttpMethod.PUT, "/admins/*").hasRole("SUPERADMIN") // update admin
+                .requestMatchers(HttpMethod.DELETE, "/admins/*").hasRole("SUPERADMIN") // delete admin
+                .requestMatchers(HttpMethod.GET, "/posts/*").permitAll() // list all posts
+                .requestMatchers(HttpMethod.GET, "/posts").permitAll() // list all posts
                 .anyRequest().permitAll();
 
         // add the custom authentication filter to the http security object
