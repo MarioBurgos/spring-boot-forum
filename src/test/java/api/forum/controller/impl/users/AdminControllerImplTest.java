@@ -1,11 +1,11 @@
 package api.forum.controller.impl.users;
 
+import api.forum.controller.dto.userDTO.*;
 import api.forum.model.enums.Shift;
 import api.forum.model.enums.Status;
 import api.forum.model.users.Admin;
 import api.forum.model.users.Role;
 import api.forum.repository.users.AdminRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class AdminDTOControllerImplTest {
+class AdminControllerImplTest {
     @Autowired
     private AdminRepository adminRepository;
     @Autowired
@@ -49,25 +49,25 @@ class AdminDTOControllerImplTest {
     @BeforeEach
     void setUp() {
         superAdminUsername = "super-admin";
-        firstRegularAdminUsername = "admin A";
-        secondRegularAdminUsername = "admin B";
+        firstRegularAdminUsername = "first";
+        secondRegularAdminUsername = "second";
         superAdminPassword = "password";
         firstRegularAdminPassword = "password";
         secondRegularAdminPassword = "password";
-        superAdmin = new Admin(superAdminUsername, "EMAIL", passwordEncoder.encode(superAdminPassword));
+        superAdmin = new Admin(superAdminUsername, "super@email", passwordEncoder.encode(superAdminPassword));
         superAdmin.setShift(Shift.MORNING);
-        superAdmin.setLocation("UK");
+        superAdmin.setLocation("superCity");
         superAdmin.setStatus(Status.DISCONNECTED);
         superAdmin.setLastLogIn(Date.valueOf(LocalDate.now()));
         superAdmin.setRoles(List.of(new Role("SUPERADMIN"), new Role("ADMIN")));
-        firstRegularAdmin = new Admin(firstRegularAdminUsername, "emailA@email", passwordEncoder.encode(firstRegularAdminPassword));
+        firstRegularAdmin = new Admin(firstRegularAdminUsername, "first@email", passwordEncoder.encode(firstRegularAdminPassword));
         firstRegularAdmin.setShift(Shift.NIGHT);
-        firstRegularAdmin.setLocation("ITA");
+        firstRegularAdmin.setLocation("firstCity");
         firstRegularAdmin.setStatus(Status.BANNED);
         firstRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2020, 1, 1)));
-        secondRegularAdmin = new Admin(secondRegularAdminUsername, "emailB@email", passwordEncoder.encode(secondRegularAdminPassword));
+        secondRegularAdmin = new Admin(secondRegularAdminUsername, "second@email", passwordEncoder.encode(secondRegularAdminPassword));
         secondRegularAdmin.setShift(Shift.NIGHT);
-        secondRegularAdmin.setLocation("ITA");
+        secondRegularAdmin.setLocation("firstCity");
         secondRegularAdmin.setStatus(Status.ON_LINE);
         secondRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2023, 3, 3)));
         adminRepository.saveAll(List.of(superAdmin, firstRegularAdmin, secondRegularAdmin));
@@ -166,9 +166,6 @@ class AdminDTOControllerImplTest {
 
     @Test
     void findById_AuthenticatedSuperAdmin_ResponseStatus200Ok() throws Exception {
-        // Give SUPERADMIN Role and persist
-        superAdmin.setRoles(List.of(new Role("ADMIN"), new Role("SUPERADMIN")));
-        adminRepository.save(superAdmin);
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", superAdminUsername)
                         .param("password", superAdminPassword))
@@ -178,7 +175,6 @@ class AdminDTOControllerImplTest {
         String token = jsonObject.getString("access_token");
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
-        // find admin2 by id
         mvcResult = mockMvc.perform(get("/admins/id/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -457,7 +453,7 @@ class AdminDTOControllerImplTest {
         thirdRegularAdmin.setStatus(Status.BANNED);
         thirdRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2010,8,22)));
         String body = objectMapper.writeValueAsString(thirdRegularAdmin);
-        // login as SuperAdmin
+        // login as regular admin
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", firstRegularAdminUsername)
                         .param("password", firstRegularAdminPassword))
@@ -515,7 +511,7 @@ class AdminDTOControllerImplTest {
         secondRegularAdmin.setLocation("updated");
         secondRegularAdmin.setEmail("updated");
         String body = objectMapper.writeValueAsString(secondRegularAdmin);
-        // login as admin1
+        // login as regular admin
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", firstRegularAdminUsername)
                         .param("password", firstRegularAdminPassword))
@@ -538,12 +534,11 @@ class AdminDTOControllerImplTest {
                 .andReturn();
     }
     @Test
-    void updateAdmin_RegularAdminTriesToUpdateHisOrHerOwnInformation_ResponseStatus403Forbidden() throws Exception {
+    void updateAdmin_RegularAdminUpdatesOwnInformation_ResponseStatus403Forbidden() throws Exception {
         firstRegularAdmin.setRoles(List.of(new Role("SUPERADMIN"), new Role("ADMIN")));
         firstRegularAdmin.setShift(Shift.MORNING);
         firstRegularAdmin.setStatus(Status.ON_VACATION);
         String body = objectMapper.writeValueAsString(firstRegularAdmin);
-        // login as admin1
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", firstRegularAdminUsername)
                         .param("password", firstRegularAdminPassword))
@@ -554,7 +549,6 @@ class AdminDTOControllerImplTest {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
         mvcResult = mockMvc.perform(
-                        // try to update admin2
                         put("/admins/" + firstRegularAdmin.getId())
                                 .headers(httpHeaders)
                                 .param("username", firstRegularAdmin.getUsername())
@@ -566,12 +560,11 @@ class AdminDTOControllerImplTest {
                 .andReturn();
     }
     @Test
-    void updateAdmin_SuperAdminTriesToUpdateAnotherAdmin_ResponseStatus204NoContent() throws Exception {
+    void updateAdmin_SuperAdminUpdatesAnotherAdmin_ResponseStatus204NoContent() throws Exception {
         firstRegularAdmin.setRoles(List.of(new Role("SUPERADMIN"), new Role("ADMIN")));
         firstRegularAdmin.setShift(Shift.MORNING);
         firstRegularAdmin.setStatus(Status.ON_VACATION);
         String body = objectMapper.writeValueAsString(firstRegularAdmin);
-        // login as admin1
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", superAdminUsername)
                         .param("password", superAdminPassword))
@@ -582,7 +575,6 @@ class AdminDTOControllerImplTest {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Authorization", "Bearer " + token);
         mvcResult = mockMvc.perform(
-                        // try to update admin2
                         put("/admins/" + firstRegularAdmin.getId())
                                 .headers(httpHeaders)
                                 .param("username", superAdmin.getUsername())
@@ -599,9 +591,10 @@ class AdminDTOControllerImplTest {
     }
 
     @Test
-    void updateAdminEmail_RegularAdminTriesToUpdateAnotherAdminSEmail_ResponseStatus403Forbidden() throws Exception {
-        secondRegularAdmin.setEmail("updated");
-        String body = objectMapper.writeValueAsString(secondRegularAdmin);
+    void updateAdminUsername_RegularAdminTriesToUpdateAnotherAdminSUsername_ResponseStatus403Forbidden() throws Exception {
+        UsernameDTO usernameDTO = new UsernameDTO();
+        usernameDTO.setUsername("updated");
+        String body = objectMapper.writeValueAsString(usernameDTO);
         // login as admin1
         mvcResult = mockMvc.perform(get("/login")
                         .param("username", firstRegularAdminUsername)
@@ -614,7 +607,7 @@ class AdminDTOControllerImplTest {
         httpHeaders.add("Authorization", "Bearer " + token);
         mvcResult = mockMvc.perform(
                         // try to update admin2
-                        put("/admins/" + secondRegularAdmin.getId() + "/email")
+                        patch("/admins/" + secondRegularAdmin.getId() + "/username")
                                 .headers(httpHeaders)
                                 .param("username", firstRegularAdmin.getUsername())
                                 .param("password", firstRegularAdmin.getPassword())
@@ -626,22 +619,495 @@ class AdminDTOControllerImplTest {
     }
 
     @Test
-    void updateAdminPassword_RegularAdminTriesToUpdateOwnEmail_ResponseStatus401NoContent() {
+    void updateAdminUsername_RegularAdminUpdatesOwnUsername_ResponseStatus204NoContent() throws Exception {
+        UsernameDTO usernameDTO = new UsernameDTO();
+        usernameDTO.setUsername("updated");
+        String body = objectMapper.writeValueAsString(usernameDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/username")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getUsername(), usernameDTO.getUsername());
+    }
+    @Test
+    void updateAdminUsername_SuperAdminUpdatesOtherUsername_ResponseStatus204NoContent() throws Exception {
+        UsernameDTO usernameDTO = new UsernameDTO();
+        usernameDTO.setUsername("updated");
+        String body = objectMapper.writeValueAsString(usernameDTO);
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/username")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getUsername(), usernameDTO.getUsername());
     }
 
     @Test
-    void updateAdminPassword_SuperAdminTriesToUpdateOtherEmail_ResponseStatus401NoContent() {
+    void updateAdminEmail_RegularAdminTriesToUpdateAnotherAdminSEmail_ResponseStatus403Forbidden() throws Exception {
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail("updated");
+        String body = objectMapper.writeValueAsString(emailDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        patch("/admins/" + secondRegularAdmin.getId() + "/email")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
     }
 
     @Test
-    void updateStatus() {
+    void updateAdminEmail_RegularAdminUpdatesOwnEmail_ResponseStatus204NoContent() throws Exception {
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail("updated");
+        String body = objectMapper.writeValueAsString(emailDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/email")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getEmail(), emailDTO.getEmail());
+    }
+    @Test
+    void updateAdminEmail_SuperAdminUpdatesOtherEmail_ResponseStatus204NoContent() throws Exception {
+        EmailDTO emailDTO = new EmailDTO();
+        emailDTO.setEmail("updated");
+        String body = objectMapper.writeValueAsString(emailDTO);
+        // login as super admin
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/email")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getEmail(), emailDTO.getEmail());
+    }
+    @Test
+    void updateAdminPassword_RegularAdminTriesToUpdateAnotherAdminSPassword_ResponseStatus403Forbidden() throws Exception {
+        PasswordDTO passwordDTO = new PasswordDTO();
+        passwordDTO.setPassword(passwordEncoder.encode("updated"));
+        String body = objectMapper.writeValueAsString(passwordDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        patch("/admins/" + secondRegularAdmin.getId() + "/password")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
     }
 
     @Test
-    void updateShift() {
+    void updateAdminPassword_RegularAdminUpdatesOwnPassword_ResponseStatus204NoContent() throws Exception {
+        PasswordDTO passwordDTO = new PasswordDTO();
+        passwordDTO.setPassword(passwordEncoder.encode("updated"));
+        String body = objectMapper.writeValueAsString(passwordDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/password")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getPassword(), passwordDTO.getPassword());
+    }
+    @Test
+    void updateAdminPassword_SuperAdminUpdatesOtherPassword_ResponseStatus204NoContent() throws Exception {
+        PasswordDTO passwordDTO = new PasswordDTO();
+        passwordDTO.setPassword(passwordEncoder.encode("updated"));
+        String body = objectMapper.writeValueAsString(passwordDTO);
+        // login as super admin
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // update admin
+                        patch("/admins/" + firstRegularAdmin.getId() + "/password")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getPassword(), passwordDTO.getPassword());
     }
 
     @Test
-    void updateLocation() {
+    void updateAdminStatus_RegularAdminTriesToUpdateAnotherAdminSStatus_ResponseStatus403Forbidden() throws Exception {
+        StatusDTO statusDTO = new StatusDTO();
+        statusDTO.setStatus(Status.PENDING_CONFIRMATION);
+        String body = objectMapper.writeValueAsString(statusDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        patch("/admins/" + secondRegularAdmin.getId() + "/status")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
     }
+
+    @Test
+    void updateAdminStatus_RegularAdminTriesToUpdateOwnStatus_ResponseStatus204NoContent() throws Exception {
+        StatusDTO statusDTO = new StatusDTO();
+        statusDTO.setStatus(Status.PENDING_CONFIRMATION);
+        String body = objectMapper.writeValueAsString(statusDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/status")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getStatus(), statusDTO.getStatus());
+    }
+    @Test
+    void updateAdminStatus_SuperAdminUpdatesOtherStatus_ResponseStatus204NoContent() throws Exception {
+        StatusDTO statusDTO = new StatusDTO();
+        statusDTO.setStatus(Status.PENDING_CONFIRMATION);
+        String body = objectMapper.writeValueAsString(statusDTO);
+        // login as super admin
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // update admin
+                        patch("/admins/" + firstRegularAdmin.getId() + "/status")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getStatus(), statusDTO.getStatus());
+    }
+
+    @Test
+    void updateAdminShift_RegularAdminTriesToUpdateAnotherAdminSShift_ResponseStatus403Forbidden() throws Exception {
+        ShiftDTO shiftDTO = new ShiftDTO();
+        shiftDTO.setShift(Shift.EVENING);
+        String body = objectMapper.writeValueAsString(shiftDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        patch("/admins/" + secondRegularAdmin.getId() + "/shift")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    void updateAdminShift_RegularAdminTriesToUpdateOwnShift_ResponseStatus403Forbidden() throws Exception {
+        ShiftDTO shiftDTO = new ShiftDTO();
+        shiftDTO.setShift(Shift.EVENING);
+        String body = objectMapper.writeValueAsString(shiftDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/shift")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+    @Test
+    void updateAdminShift_SuperAdminUpdatesOtherAdminShift_ResponseStatus204NoContent() throws Exception {
+        ShiftDTO shiftDTO = new ShiftDTO();
+        shiftDTO.setShift(Shift.EVENING);
+        String body = objectMapper.writeValueAsString(shiftDTO);
+        // login as super admin
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // update admin
+                        patch("/admins/" + firstRegularAdmin.getId() + "/shift")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getShift(), shiftDTO.getShift());
+    }
+    @Test
+    void updateAdminLocation_RegularAdminTriesToUpdateAnotherAdminSLocation_ResponseStatus403Forbidden() throws Exception {
+        LocationDTO locationDTO = new LocationDTO();
+        locationDTO.setLocation("UPDATED LOCATION");
+        String body = objectMapper.writeValueAsString(locationDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // try to update admin2
+                        patch("/admins/" + secondRegularAdmin.getId() + "/location")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    void updateAdminLocation_RegularAdminUpdatesOwnLocation_ResponseStatus204NoContent() throws Exception {
+        LocationDTO locationDTO = new LocationDTO();
+        locationDTO.setLocation("UPDATED LOCATION");
+        String body = objectMapper.writeValueAsString(locationDTO);
+        // login as admin1
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", firstRegularAdminUsername)
+                        .param("password", firstRegularAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        patch("/admins/" + firstRegularAdmin.getId() + "/location")
+                                .headers(httpHeaders)
+                                .param("username", firstRegularAdmin.getUsername())
+                                .param("password", firstRegularAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getLocation(), locationDTO.getLocation());
+    }
+    @Test
+    void updateAdminLocation_SuperAdminUpdatesOtherAdminLocation_ResponseStatus204NoContent() throws Exception {
+        LocationDTO locationDTO = new LocationDTO();
+        locationDTO.setLocation("UPDATED LOCATION");
+        String body = objectMapper.writeValueAsString(locationDTO);
+        // login as super admin
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", superAdminUsername)
+                        .param("password", superAdminPassword))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        mvcResult = mockMvc.perform(
+                        // update admin
+                        patch("/admins/" + firstRegularAdmin.getId() + "/location")
+                                .headers(httpHeaders)
+                                .param("username", superAdmin.getUsername())
+                                .param("password", superAdmin.getPassword())
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isNoContent())
+                .andReturn();
+        Optional<Admin> optionalAdmin = adminRepository.findById(firstRegularAdmin.getId());
+        assertTrue(optionalAdmin.isPresent());
+        assertEquals(optionalAdmin.get().getLocation(), locationDTO.getLocation());
+    }
+
 }
