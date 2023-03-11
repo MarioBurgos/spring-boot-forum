@@ -80,15 +80,7 @@ class AdminControllerImplTest {
 
     @Test
     void findAll_HasNoSuperAdminRole_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins")
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -99,15 +91,7 @@ class AdminControllerImplTest {
 
     @Test
     void findAll_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(get("/admins")
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -125,15 +109,7 @@ class AdminControllerImplTest {
 
     @Test
     void findById_HasAdminRoleButItIsNotHisOrHerAdminAccount_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/" + secondRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -144,15 +120,8 @@ class AdminControllerImplTest {
 
     @Test
     void findById_AuthenticatedAdmin_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
+        JSONObject jsonObject;
         mvcResult = mockMvc.perform(get("/admins/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -166,15 +135,8 @@ class AdminControllerImplTest {
 
     @Test
     void findById_AuthenticatedSuperAdmin_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
+        JSONObject jsonObject;
         mvcResult = mockMvc.perform(get("/admins/" + firstRegularAdmin.getId())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -189,15 +151,7 @@ class AdminControllerImplTest {
 
     @Test
     void findByEmail_HasAdminRoleButItIsNotHisOrHerAdminAccount_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/email/" + secondRegularAdmin.getEmail())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -208,15 +162,8 @@ class AdminControllerImplTest {
 
     @Test
     void findByEmail_AuthenticatedSuperAdmin_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
+        JSONObject jsonObject;
         mvcResult = mockMvc.perform(get("/admins/email/" + firstRegularAdmin.getEmail())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -231,15 +178,8 @@ class AdminControllerImplTest {
 
     @Test
     void findByEmail_AuthenticatedRegularAdmin_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
+        JSONObject jsonObject;
         mvcResult = mockMvc.perform(get("/admins/email/" + firstRegularAdmin.getEmail())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -254,16 +194,8 @@ class AdminControllerImplTest {
 
  @Test
     void findByLastLogIn_SuperAdminPassesBothStartDateAndEndDateParams_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-3-1&end-date=2023-3-5")
+     HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
+     mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-3-1&end-date=2023-3-5")
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
                         .param("password", superAdmin.getPassword()))
@@ -277,16 +209,8 @@ class AdminControllerImplTest {
     }
 @Test
     void findByLastLogIn_SuperAdminPassesOnlyStartDateParam_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
-        mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-1-1")
+    HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
+    mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2023-1-1")
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
                         .param("password", superAdmin.getPassword()))
@@ -301,15 +225,7 @@ class AdminControllerImplTest {
     }
     @Test
     void findByLastLogIn_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/last-login?start-date=2020-1-1&end-date=2023-3-10")
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -320,15 +236,7 @@ class AdminControllerImplTest {
 
     @Test
     void findByStatus_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/status/" + secondRegularAdmin.getStatus())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -338,15 +246,7 @@ class AdminControllerImplTest {
     }
     @Test
     void findByStatus_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/status/" + secondRegularAdmin.getStatus())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -361,15 +261,7 @@ class AdminControllerImplTest {
 
     @Test
     void findByShift_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/shift/" + secondRegularAdmin.getShift())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -379,15 +271,7 @@ class AdminControllerImplTest {
     }
     @Test
     void findByShift_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/shift/" + secondRegularAdmin.getShift())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -404,15 +288,7 @@ class AdminControllerImplTest {
 
     @Test
     void findByLocation_HasRegularAdminRole_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/location/" + secondRegularAdmin.getLocation())
                         .headers(httpHeaders)
                         .param("username", firstRegularAdmin.getUsername())
@@ -422,15 +298,7 @@ class AdminControllerImplTest {
     }
     @Test
     void findByLocation_HasSuperAdminRole_ResponseStatus200Ok() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(get("/admins/location/" + firstRegularAdmin.getLocation())
                         .headers(httpHeaders)
                         .param("username", superAdmin.getUsername())
@@ -454,15 +322,7 @@ class AdminControllerImplTest {
         thirdRegularAdmin.setLastLogIn(Date.valueOf(LocalDate.of(2010,8,22)));
         String body = objectMapper.writeValueAsString(thirdRegularAdmin);
         // login as regular admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         post("/admins")
                                 .headers(httpHeaders)
@@ -481,15 +341,8 @@ class AdminControllerImplTest {
         thirdRegularAdmin = new Admin("newAdmin", "newEmail", "password");
         String body = objectMapper.writeValueAsString(thirdRegularAdmin);
         // login as SuperAdmin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
+        JSONObject jsonObject;
         mvcResult = mockMvc.perform(
                         post("/admins")
                                 .headers(httpHeaders)
@@ -512,15 +365,7 @@ class AdminControllerImplTest {
         secondRegularAdmin.setEmail("updated");
         String body = objectMapper.writeValueAsString(secondRegularAdmin);
         // login as regular admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         put("/admins/" + secondRegularAdmin.getId())
@@ -539,15 +384,7 @@ class AdminControllerImplTest {
         firstRegularAdmin.setShift(Shift.MORNING);
         firstRegularAdmin.setStatus(Status.ON_VACATION);
         String body = objectMapper.writeValueAsString(firstRegularAdmin);
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         put("/admins/" + firstRegularAdmin.getId())
                                 .headers(httpHeaders)
@@ -565,15 +402,7 @@ class AdminControllerImplTest {
         firstRegularAdmin.setShift(Shift.MORNING);
         firstRegularAdmin.setStatus(Status.ON_VACATION);
         String body = objectMapper.writeValueAsString(firstRegularAdmin);
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         put("/admins/" + firstRegularAdmin.getId())
                                 .headers(httpHeaders)
@@ -596,15 +425,7 @@ class AdminControllerImplTest {
         usernameDTO.setUsername("updated");
         String body = objectMapper.writeValueAsString(usernameDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/username")
@@ -624,15 +445,7 @@ class AdminControllerImplTest {
         usernameDTO.setUsername("updated");
         String body = objectMapper.writeValueAsString(usernameDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/username")
                                 .headers(httpHeaders)
@@ -652,15 +465,7 @@ class AdminControllerImplTest {
         UsernameDTO usernameDTO = new UsernameDTO();
         usernameDTO.setUsername("updated");
         String body = objectMapper.writeValueAsString(usernameDTO);
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/username")
                                 .headers(httpHeaders)
@@ -682,15 +487,7 @@ class AdminControllerImplTest {
         emailDTO.setEmail("updated");
         String body = objectMapper.writeValueAsString(emailDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/email")
@@ -710,15 +507,7 @@ class AdminControllerImplTest {
         emailDTO.setEmail("updated");
         String body = objectMapper.writeValueAsString(emailDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/email")
                                 .headers(httpHeaders)
@@ -739,15 +528,7 @@ class AdminControllerImplTest {
         emailDTO.setEmail("updated");
         String body = objectMapper.writeValueAsString(emailDTO);
         // login as super admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/email")
                                 .headers(httpHeaders)
@@ -768,15 +549,7 @@ class AdminControllerImplTest {
         passwordDTO.setPassword(passwordEncoder.encode("updated"));
         String body = objectMapper.writeValueAsString(passwordDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/password")
@@ -796,15 +569,7 @@ class AdminControllerImplTest {
         passwordDTO.setPassword(passwordEncoder.encode("updated"));
         String body = objectMapper.writeValueAsString(passwordDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/password")
                                 .headers(httpHeaders)
@@ -825,15 +590,7 @@ class AdminControllerImplTest {
         passwordDTO.setPassword(passwordEncoder.encode("updated"));
         String body = objectMapper.writeValueAsString(passwordDTO);
         // login as super admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         // update admin
                         patch("/admins/" + firstRegularAdmin.getId() + "/password")
@@ -856,15 +613,7 @@ class AdminControllerImplTest {
         statusDTO.setStatus(Status.PENDING_CONFIRMATION);
         String body = objectMapper.writeValueAsString(statusDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/status")
@@ -884,15 +633,7 @@ class AdminControllerImplTest {
         statusDTO.setStatus(Status.PENDING_CONFIRMATION);
         String body = objectMapper.writeValueAsString(statusDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/status")
                                 .headers(httpHeaders)
@@ -913,15 +654,7 @@ class AdminControllerImplTest {
         statusDTO.setStatus(Status.PENDING_CONFIRMATION);
         String body = objectMapper.writeValueAsString(statusDTO);
         // login as super admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         // update admin
                         patch("/admins/" + firstRegularAdmin.getId() + "/status")
@@ -944,15 +677,7 @@ class AdminControllerImplTest {
         shiftDTO.setShift(Shift.EVENING);
         String body = objectMapper.writeValueAsString(shiftDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/shift")
@@ -972,15 +697,7 @@ class AdminControllerImplTest {
         shiftDTO.setShift(Shift.EVENING);
         String body = objectMapper.writeValueAsString(shiftDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/shift")
                                 .headers(httpHeaders)
@@ -998,15 +715,7 @@ class AdminControllerImplTest {
         shiftDTO.setShift(Shift.EVENING);
         String body = objectMapper.writeValueAsString(shiftDTO);
         // login as super admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         // update admin
                         patch("/admins/" + firstRegularAdmin.getId() + "/shift")
@@ -1028,15 +737,7 @@ class AdminControllerImplTest {
         locationDTO.setLocation("UPDATED LOCATION");
         String body = objectMapper.writeValueAsString(locationDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         patch("/admins/" + secondRegularAdmin.getId() + "/location")
@@ -1056,15 +757,7 @@ class AdminControllerImplTest {
         locationDTO.setLocation("UPDATED LOCATION");
         String body = objectMapper.writeValueAsString(locationDTO);
         // login as admin1
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         patch("/admins/" + firstRegularAdmin.getId() + "/location")
                                 .headers(httpHeaders)
@@ -1085,15 +778,7 @@ class AdminControllerImplTest {
         locationDTO.setLocation("UPDATED LOCATION");
         String body = objectMapper.writeValueAsString(locationDTO);
         // login as super admin
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         // update admin
                         patch("/admins/" + firstRegularAdmin.getId() + "/location")
@@ -1112,15 +797,7 @@ class AdminControllerImplTest {
 
     @Test
     void delete_RegularAdminTriesToDeleteAnotherAdmin_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         delete("/admins/" + secondRegularAdmin.getId())
@@ -1133,15 +810,7 @@ class AdminControllerImplTest {
     }
     @Test
     void delete_RegularAdminTriesToDeleteOwnAdmin_ResponseStatus403Forbidden() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", firstRegularAdminUsername)
-                        .param("password", firstRegularAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(firstRegularAdminUsername, firstRegularAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         delete("/admins/" + firstRegularAdmin.getId())
@@ -1154,15 +823,7 @@ class AdminControllerImplTest {
     }
     @Test
     void delete_SuperAdminToDeletesAdmin_ResponseStatus204NoContent() throws Exception {
-        mvcResult = mockMvc.perform(get("/login")
-                        .param("username", superAdminUsername)
-                        .param("password", superAdminPassword))
-                .andExpect(status().isOk())
-                .andReturn();
-        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
-        String token = jsonObject.getString("access_token");
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Authorization", "Bearer " + token);
+        HttpHeaders httpHeaders = getJWTLoginHeaders(superAdminUsername, superAdminPassword);
         mvcResult = mockMvc.perform(
                         // try to update admin2
                         delete("/admins/" + firstRegularAdmin.getId())
@@ -1174,4 +835,17 @@ class AdminControllerImplTest {
                 .andReturn();
         assertFalse(adminRepository.existsById(firstRegularAdmin.getId()));
     }
+    private HttpHeaders getJWTLoginHeaders(String username, String password) throws Exception {
+        mvcResult = mockMvc.perform(get("/login")
+                        .param("username", username)
+                        .param("password", password))
+                .andExpect(status().isOk())
+                .andReturn();
+        JSONObject jsonObject = new JSONObject(mvcResult.getResponse().getContentAsString());
+        String token = jsonObject.getString("access_token");
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", "Bearer " + token);
+        return httpHeaders;
+    }
+
 }
