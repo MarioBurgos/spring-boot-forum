@@ -1,4 +1,4 @@
-package api.forum.controller.dto;
+package api.forum.controller.dto.postDTO;
 
 import api.forum.model.posts.Comment;
 import api.forum.model.posts.Post;
