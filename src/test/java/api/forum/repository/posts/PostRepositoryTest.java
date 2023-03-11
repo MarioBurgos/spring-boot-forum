@@ -39,9 +39,12 @@ class PostRepositoryTest {
     @BeforeEach
     void setUp() {
         admin = new Admin();
+        admin.setUsername("admin");
         adminRepository.save(admin);
         proMember = new Member();
+        proMember.setUsername("pro");
         regularMember = new Member();
+        regularMember.setUsername("regular");
         memberRepository.saveAll(List.of(proMember, regularMember));
 
         category1 = new Category("category1");
@@ -68,11 +71,10 @@ class PostRepositoryTest {
     }
 
     @Test
-    void findByAuthor_GivenAValidAuthor_ReturnsPostFound() {
-        List<Post> proMemberPosts = postRepository.findByAuthor(proMember);
-        List<Post> regularMemberPosts = postRepository.findByAuthor(regularMember);
-        List<Post> adminPosts = postRepository.findByAuthor(admin);
-
+    void findByAuthor_GivenAValidAuthorUsername_ReturnsPostFound() {
+        List<Post> proMemberPosts = postRepository.findByAuthorUsername(proMember.getUsername());
+        List<Post> regularMemberPosts = postRepository.findByAuthorUsername(regularMember.getUsername());
+        List<Post> adminPosts = postRepository.findByAuthorUsername(admin.getUsername());
         assertEquals(2, proMemberPosts.size());
         assertEquals(0, regularMemberPosts.size());
         assertEquals(1, adminPosts.size());
@@ -86,17 +88,17 @@ class PostRepositoryTest {
 
     @Test
     void findByTitle_GivenAValidTitle_ReturnsThePostFound() {
-        Optional<Post> optionalPost1 = postRepository.findByTitle("title1");
-        Optional<Post> optionalPost2 = postRepository.findByTitle("title2");
-        Optional<Post> optionalPost3 = postRepository.findByTitle("title3");
+        Optional<Post> optionalPost1 = postRepository.findByTitleContaining("title1");
+        Optional<Post> optionalPost2 = postRepository.findByTitleContaining("title2");
+        Optional<Post> optionalPost3 = postRepository.findByTitleContaining("title3");
         assertTrue(optionalPost1.isPresent() && optionalPost2.isPresent() && optionalPost3.isPresent());
     }
 
     @Test
     void findByCategory_GivenAValidCategory_ReturnsThePostsInThatCategory() {
-        List<Post> postsByCategory1 = postRepository.findByCategory(category1);
-        List<Post> postsByCategory2 = postRepository.findByCategory(category2);
-        List<Post> postsByCategory3 = postRepository.findByCategory(category3);
+        List<Post> postsByCategory1 = postRepository.findByCategoryTitle(category1.getTitle());
+        List<Post> postsByCategory2 = postRepository.findByCategoryTitle(category2.getTitle());
+        List<Post> postsByCategory3 = postRepository.findByCategoryTitle(category3.getTitle());
         assertEquals(1, postsByCategory1.size());
         assertEquals(1, postsByCategory2.size());
         assertEquals(1, postsByCategory3.size());
@@ -107,7 +109,7 @@ class PostRepositoryTest {
 
     @Test
     void findByDateGreaterThan_GivenDateLowerThanExisting_ReturnsPostsCreatedAfterTheDate() {
-        List<Post> posts = postRepository.findByDateGreaterThan(Date.valueOf(LocalDate.of(2000,1,1)));
+        List<Post> posts = postRepository.findByDateGreaterThanEqual(Date.valueOf(LocalDate.of(2000,1,1)));
         assertEquals(2, posts.size());
         assertEquals(post2.getDate(), posts.get(0).getDate());
         assertNotEquals(post3.getDate(), posts.get(0).getDate());
